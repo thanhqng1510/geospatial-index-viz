@@ -1,9 +1,10 @@
+import MapView from './MapView'
 import './MapCanvas.css'
 
 function MapCanvas() {
   return (
     <div className="map-canvas">
-      {/* MapLibre GL + Deck.gl overlay — implemented in Task 3 */}
+      <MapView />
     </div>
   )
 }
