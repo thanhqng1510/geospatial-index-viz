@@ -14,7 +14,7 @@ const MINIMAL_BASE_STYLE: maplibregl.StyleSpecification = {
   sources: {},
   layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#f0ede8' } }],
 }
-const COUNTRIES_GEOJSON_URL = '/data/countries.geojson'
+const COUNTRIES_GEOJSON_URL = './data/countries.geojson'
 const COUNTRIES_SOURCE_ID = 'countries'
 const COUNTRIES_LAYER_ID = 'country-borders'
 const INITIAL_CENTER: [number, number] = [0, 0]
