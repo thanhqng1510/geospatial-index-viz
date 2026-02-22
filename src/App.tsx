@@ -19,7 +19,7 @@ function App() {
       />
       <div className="app__body">
         <LeftPanel />
-        <MapCanvas />
+        <MapCanvas basemap={basemap} />
       </div>
     </div>
   )

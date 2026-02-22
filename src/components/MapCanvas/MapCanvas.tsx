@@ -1,10 +1,15 @@
+import type { Basemap } from '../../types'
 import MapView from './MapView'
 import './MapCanvas.css'
 
-function MapCanvas() {
+interface MapCanvasProps {
+  basemap: Basemap
+}
+
+function MapCanvas({ basemap }: MapCanvasProps) {
   return (
     <div className="map-canvas">
-      <MapView />
+      <MapView basemap={basemap} />
     </div>
   )
 }
