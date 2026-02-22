@@ -7,7 +7,6 @@ import {
   getGeohashPrecision,
   geohashesToGeoJSON,
   encodeGeohash,
-  getGeohashCellCenter,
 } from '../../utils/geohash'
 import ngeohash from 'ngeohash'
 
@@ -20,7 +19,7 @@ const TEXT_OPACITY = 180   // 70% of 255
 
 interface SelectedCell {
   hash: string
-  center: { lat: number; lng: number }
+  anchor: { lat: number; lng: number } // original click coordinates, used to re-encode on precision change
 }
 
 /**
@@ -47,6 +46,16 @@ export function useGeohashLayer(mode: Mode) {
     return getGeohashCellsGuarded(viewport, viewport.zoom)
   }, [viewport, mode])
 
+  // Recompute selected cell's hash when precision changes due to zoom
+  useEffect(() => {
+    if (cells.length === 0 || !selectedCell) return
+    const newPrecision = cells[0].length
+    if (newPrecision === selectedCell.hash.length) return // precision unchanged
+
+    const newHash = encodeGeohash(selectedCell.anchor.lat, selectedCell.anchor.lng, newPrecision)
+    setSelectedCell({ hash: newHash, anchor: selectedCell.anchor })
+  }, [cells]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // GeoJSON FeatureCollection for rendering
   const geojson = useMemo(() => geohashesToGeoJSON(cells), [cells])
 
@@ -68,7 +77,7 @@ export function useGeohashLayer(mode: Mode) {
       setSelectedCell((prev) =>
         prev?.hash === clickedHash
           ? null // re-click → deselect
-          : { hash: clickedHash, center: getGeohashCellCenter(clickedHash) },
+          : { hash: clickedHash, anchor: { lat, lng } },
       )
     },
     [mode, viewport, cells],
