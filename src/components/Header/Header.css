@@ -1,0 +1,58 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+  padding: 0 16px;
+  background: #1a1a2e;
+  color: #fff;
+  flex-shrink: 0;
+  gap: 16px;
+}
+
+.header__title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.header__controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Segmented toggle group */
+.toggle-group {
+  display: flex;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.toggle-group__btn {
+  padding: 5px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.toggle-group__btn + .toggle-group__btn {
+  border-left: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.toggle-group__btn:hover:not(.toggle-group__btn--active) {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.toggle-group__btn--active {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}

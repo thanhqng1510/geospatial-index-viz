@@ -1,0 +1,6 @@
+.map-canvas {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: #f0ede8;
+}
