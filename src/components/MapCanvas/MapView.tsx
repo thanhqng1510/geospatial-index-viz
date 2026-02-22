@@ -19,7 +19,7 @@ const COUNTRIES_SOURCE_ID = 'countries'
 const COUNTRIES_LAYER_ID = 'country-borders'
 const INITIAL_CENTER: [number, number] = [0, 0]
 const INITIAL_ZOOM = 2
-const VIEWPORT_DEBOUNCE_MS = 150
+const VIEWPORT_DEBOUNCE_MS = 250
 
 interface MapViewProps {
   basemap: Basemap
