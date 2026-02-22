@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import type { FeatureCollection } from 'geojson'
+import { colorizeCountries } from '../../utils/colorizeCountries'
 import type { Basemap } from '../../types'
 import './MapView.css'
 
@@ -54,7 +55,8 @@ function MapView({ basemap }: MapViewProps) {
     const applyCountryLayer = async () => {
       if (!countriesDataRef.current) {
         const res = await fetch(COUNTRIES_GEOJSON_URL)
-        countriesDataRef.current = (await res.json()) as FeatureCollection
+        const data = (await res.json()) as FeatureCollection
+        countriesDataRef.current = colorizeCountries(data)
       }
 
       // Avoid re-adding source/layer if they already exist on the current style
@@ -68,11 +70,12 @@ function MapView({ basemap }: MapViewProps) {
       if (!map.getLayer(COUNTRIES_LAYER_ID)) {
         map.addLayer({
           id: COUNTRIES_LAYER_ID,
-          type: 'line',
+          type: 'fill',
           source: COUNTRIES_SOURCE_ID,
           paint: {
-            'line-color': '#aaaaaa',
-            'line-width': 0.8,
+            'fill-color': ['get', 'color'],
+            'fill-opacity': 0.6,
+            'fill-outline-color': '#555555',
           },
         })
       }
