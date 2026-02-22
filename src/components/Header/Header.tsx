@@ -26,6 +26,12 @@ function Header({ mode, basemap, onModeChange, onBasemapChange }: HeaderProps) {
           >
             H3
           </button>
+          <button
+            className={`toggle-group__btn${mode === 'none' ? ' toggle-group__btn--active' : ''}`}
+            onClick={() => onModeChange('none')}
+          >
+            None
+          </button>
         </div>
         <div className="toggle-group" role="group" aria-label="Basemap">
           <button

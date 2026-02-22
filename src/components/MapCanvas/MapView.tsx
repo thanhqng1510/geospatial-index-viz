@@ -24,13 +24,17 @@ const VIEWPORT_DEBOUNCE_MS = 250
 interface MapViewProps {
   basemap: Basemap
   onDeckViewStateChange: (state: DeckViewState) => void
+  onClick?: (lngLat: { lng: number; lat: number }) => void
 }
 
-function MapView({ basemap, onDeckViewStateChange }: MapViewProps) {
+function MapView({ basemap, onDeckViewStateChange, onClick }: MapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   const countriesDataRef = useRef<FeatureCollection | null>(null)
   const viewportTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Stable ref so the click listener registered once always calls the latest callback
+  const onClickRef = useRef(onClick)
+  useEffect(() => { onClickRef.current = onClick }, [onClick])
 
   const { setViewport } = useViewport()
 
@@ -73,6 +77,10 @@ function MapView({ basemap, onDeckViewStateChange }: MapViewProps) {
           zoom,
         })
       }, VIEWPORT_DEBOUNCE_MS)
+    })
+
+    map.on('click', (e) => {
+      onClickRef.current?.({ lng: e.lngLat.lng, lat: e.lngLat.lat })
     })
 
     mapRef.current = map

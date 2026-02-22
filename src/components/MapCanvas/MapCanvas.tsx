@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import DeckGL from '@deck.gl/react'
-import type { Basemap } from '../../types'
+import type { Basemap, Mode } from '../../types'
+import { useGeohashLayer } from './useGeohashLayer'
 import MapView from './MapView'
 import './MapCanvas.css'
 
@@ -22,19 +23,22 @@ const INITIAL_DECK_VIEW_STATE: DeckViewState = {
 
 interface MapCanvasProps {
   basemap: Basemap
+  mode: Mode
 }
 
-function MapCanvas({ basemap }: MapCanvasProps) {
+function MapCanvas({ basemap, mode }: MapCanvasProps) {
   const [deckViewState, setDeckViewState] = useState<DeckViewState>(INITIAL_DECK_VIEW_STATE)
+
+  const { layers, onClick } = useGeohashLayer(mode)
 
   return (
     <div className="map-canvas">
-      <MapView basemap={basemap} onDeckViewStateChange={setDeckViewState} />
+      <MapView basemap={basemap} onDeckViewStateChange={setDeckViewState} onClick={onClick} />
       <DeckGL
         style={{ position: 'absolute', inset: '0', pointerEvents: 'none' }}
         viewState={deckViewState}
         controller={false}
-        layers={[]}
+        layers={layers}
       />
     </div>
   )

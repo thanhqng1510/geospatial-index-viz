@@ -19,22 +19,23 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "maplibre-gl": "^5.18.0",
-    "deck.gl": "^9.2.9",
-    "@deck.gl/react": "^9.2.9",
-    "@deck.gl/layers": "^9.2.9",
     "@deck.gl/geo-layers": "^9.2.9",
+    "@deck.gl/layers": "^9.2.9",
+    "@deck.gl/react": "^9.2.9",
+    "deck.gl": "^9.2.9",
     "h3-js": "^4.4.0",
-    "ngeohash": "^0.6.3"
+    "maplibre-gl": "^5.18.0",
+    "ngeohash": "^0.6.3",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
   },
   "devDependencies": {
-    "vite": "^7.3.1",
-    "@vitejs/plugin-react": "^5.1.4",
-    "typescript": "^5.9.3",
+    "@fission-ai/openspec": "^1.1.1",
+    "@types/ngeohash": "^0.6.8",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "@fission-ai/openspec": "^1.1.1"
+    "@vitejs/plugin-react": "^5.1.4",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1"
   }
 }

@@ -7,7 +7,7 @@ import { ViewportProvider } from './context/ViewportContext'
 import './App.css'
 
 function App() {
-  const [mode, setMode] = useState<Mode>('geohash')
+  const [mode, setMode] = useState<Mode>('none')
   const [basemap, setBasemap] = useState<Basemap>('streets')
 
   return (
@@ -21,7 +21,7 @@ function App() {
         />
         <div className="app__body">
           <LeftPanel />
-          <MapCanvas basemap={basemap} />
+          <MapCanvas basemap={basemap} mode={mode} />
         </div>
       </div>
     </ViewportProvider>
