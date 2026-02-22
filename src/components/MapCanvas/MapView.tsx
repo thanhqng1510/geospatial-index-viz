@@ -3,7 +3,9 @@ import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import type { FeatureCollection } from 'geojson'
 import { colorizeCountries } from '../../utils/colorizeCountries'
+import { useViewport } from '../../context/ViewportContext'
 import type { Basemap } from '../../types'
+import type { DeckViewState } from './MapCanvas'
 import './MapView.css'
 
 const STREETS_STYLE = 'https://tiles.openfreemap.org/styles/liberty'
@@ -17,35 +19,70 @@ const COUNTRIES_SOURCE_ID = 'countries'
 const COUNTRIES_LAYER_ID = 'country-borders'
 const INITIAL_CENTER: [number, number] = [0, 0]
 const INITIAL_ZOOM = 2
+const VIEWPORT_DEBOUNCE_MS = 150
 
 interface MapViewProps {
   basemap: Basemap
+  onDeckViewStateChange: (state: DeckViewState) => void
 }
 
-function MapView({ basemap }: MapViewProps) {
-  const containerRef = useRef<HTMLDivElement>(null)
+function MapView({ basemap, onDeckViewStateChange }: MapViewProps) {
+  const mapContainerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   const countriesDataRef = useRef<FeatureCollection | null>(null)
+  const viewportTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const { setViewport } = useViewport()
 
   // Initialize map once on mount
   useEffect(() => {
-    if (!containerRef.current || mapRef.current) return
+    if (!mapContainerRef.current || mapRef.current) return
 
     const map = new maplibregl.Map({
-      container: containerRef.current,
+      container: mapContainerRef.current,
       style: STREETS_STYLE,
       center: INITIAL_CENTER,
       zoom: INITIAL_ZOOM,
       attributionControl: { compact: true },
     })
 
+    // Sync DeckGL viewState immediately on every map move
+    // Debounce viewport bounds update for grid recompute at 150ms
+    map.on('move', () => {
+      const center = map.getCenter()
+      const zoom = map.getZoom()
+
+      // Immediate DeckGL sync for visual alignment
+      onDeckViewStateChange({
+        longitude: center.lng,
+        latitude: center.lat,
+        zoom,
+        pitch: map.getPitch(),
+        bearing: map.getBearing(),
+      })
+
+      // Debounced viewport bounds for cell recomputation
+      if (viewportTimerRef.current) clearTimeout(viewportTimerRef.current)
+      viewportTimerRef.current = setTimeout(() => {
+        const bounds = map.getBounds()
+        setViewport({
+          west: bounds.getWest(),
+          south: bounds.getSouth(),
+          east: bounds.getEast(),
+          north: bounds.getNorth(),
+          zoom,
+        })
+      }, VIEWPORT_DEBOUNCE_MS)
+    })
+
     mapRef.current = map
 
     return () => {
+      if (viewportTimerRef.current) clearTimeout(viewportTimerRef.current)
       map.remove()
       mapRef.current = null
     }
-  }, [])
+  }, [setViewport, onDeckViewStateChange])
 
   // Switch basemap when prop changes
   useEffect(() => {
@@ -101,7 +138,7 @@ function MapView({ basemap }: MapViewProps) {
     }
   }, [basemap])
 
-  return <div ref={containerRef} className="map-view" />
+  return <div ref={mapContainerRef} className="map-view" />
 }
 
 export default MapView
