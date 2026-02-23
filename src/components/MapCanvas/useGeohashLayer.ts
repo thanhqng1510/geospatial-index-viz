@@ -19,11 +19,15 @@ const TEXT_OPACITY = 180   // 70% of 255
 
 interface SelectedCell {
   hash: string
-  anchor: { lat: number; lng: number } // original click coordinates, used to re-encode on precision change
 }
 
 /**
  * Encapsulates all Geohash grid state, cell computation, styling, and click handling.
+ *
+ * @param crossModeAnchor - When the user switches from H3 mode with a selection, this holds
+ *   the previous selection's anchor so Geohash can auto-select the containing cell.
+ * @param onAnchorChange - Called whenever the anchor point changes so MapCanvas can share
+ *   it with the H3 hook for future cross-mode switches.
  *
  * Returns:
  * - `layers` — array of Deck.gl layers (GeoJsonLayer + TextLayer) ready to pass to <DeckGL layers>.
@@ -31,7 +35,11 @@ interface SelectedCell {
  * - `onClick` — pass to MapView so map clicks can select/deselect cells.
  * - `selectedCell` — the currently selected cell (hash + center), or null.
  */
-export function useGeohashLayer(mode: Mode) {
+export function useGeohashLayer(
+  mode: Mode,
+  crossModeAnchor: { lat: number; lng: number } | null,
+  onAnchorChange: (anchor: { lat: number; lng: number } | null) => void,
+) {
   const { viewport } = useViewport()
   const [selectedCell, setSelectedCell] = useState<SelectedCell | null>(null)
 
@@ -48,13 +56,24 @@ export function useGeohashLayer(mode: Mode) {
 
   // Recompute selected cell's hash when precision changes due to zoom
   useEffect(() => {
-    if (cells.length === 0 || !selectedCell) return
+    if (cells.length === 0 || !selectedCell || !crossModeAnchor) return
+
     const newPrecision = cells[0].length
     if (newPrecision === selectedCell.hash.length) return // precision unchanged
 
-    const newHash = encodeGeohash(selectedCell.anchor.lat, selectedCell.anchor.lng, newPrecision)
-    setSelectedCell({ hash: newHash, anchor: selectedCell.anchor })
+    const newHash = encodeGeohash(crossModeAnchor.lat, crossModeAnchor.lng, newPrecision)
+    setSelectedCell({ hash: newHash })
   }, [cells]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-select from cross-mode anchor when entering geohash mode with cells ready
+  useEffect(() => {
+    if (mode !== 'geohash' || !crossModeAnchor || cells.length === 0 || selectedCell) return
+    const precision = cells[0].length
+    const hash = encodeGeohash(crossModeAnchor.lat, crossModeAnchor.lng, precision)
+    if (cells.includes(hash)) {
+      setSelectedCell({ hash })
+    }
+  }, [mode, cells]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // GeoJSON FeatureCollection for rendering
   const geojson = useMemo(() => geohashesToGeoJSON(cells), [cells])
@@ -62,7 +81,7 @@ export function useGeohashLayer(mode: Mode) {
   // Encode the clicked lngLat to a geohash and toggle selection
   const onClick = useCallback(
     ({ lng, lat }: { lng: number; lat: number }) => {
-      if (mode !== 'geohash' || !viewport) return
+      if (mode !== 'geohash' || !viewport || cells.length === 0) return
 
       // Use the actual rendered precision (geohash string length = precision),
       // not the zoom-derived one — the guard may have reduced it
@@ -71,16 +90,19 @@ export function useGeohashLayer(mode: Mode) {
 
       if (!cells.includes(clickedHash)) {
         setSelectedCell(null)
+        onAnchorChange(null)
         return
       }
 
-      setSelectedCell((prev) =>
-        prev?.hash === clickedHash
+      setSelectedCell((prev) => {
+        const next = prev?.hash === clickedHash
           ? null // re-click → deselect
-          : { hash: clickedHash, anchor: { lat, lng } },
-      )
+          : { hash: clickedHash }
+        onAnchorChange(next ? { lat, lng } : null)
+        return next
+      })
     },
-    [mode, viewport, cells],
+    [mode, viewport, cells, onAnchorChange],
   )
 
   // Build the GeoJsonLayer with per-feature styling based on selection
@@ -93,7 +115,8 @@ export function useGeohashLayer(mode: Mode) {
       pickable: false, // picking is done via MapLibre click + ngeohash.encode
       stroked: true,
       filled: true,
-      lineWidthMinPixels: 1,
+      lineWidthMinPixels: 2.5,
+      lineWidthScale: 1,
       getFillColor: (f) =>
         f.properties?.hash === selectedCell?.hash
           ? [...GEOHASH_SELECTED_COLOR, FILL_OPACITY]

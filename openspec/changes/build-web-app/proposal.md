@@ -10,7 +10,6 @@ There is no good, self-hostable, interactive tool for visualizing and understand
 - Implement zoom-driven automatic precision/resolution selection for both modes
 - Add a coordinate input (lat/lng) that highlights the containing cell and displays its metadata in a sidebar panel
 - Provide two basemap modes: **Streets** (OpenFreeMap `liberty` style) and **Minimal** (blank canvas with Natural Earth country borders)
-- Package the app for self-hosting as static files and as a Docker container (nginx:alpine)
 
 ## Capabilities
 
@@ -22,7 +21,6 @@ There is no good, self-hostable, interactive tool for visualizing and understand
 - `cell-metadata`: Sidebar panel displaying metadata for the clicked/selected cell; shows Geohash string + precision + center + bounds + cell size OR H3 index + resolution + center + area + isPentagon flag
 - `coordinate-input`: Lat/lng input form (submit on Enter); computes containing cell in active mode, pans/zooms map to it, selects it and populates the metadata panel
 - `basemap-toggle`: UI control to switch between Streets (OpenFreeMap liberty) and Minimal (blank canvas + Natural Earth country borders GeoJSON) basemap modes
-- `deployment`: Dockerfile (multi-stage: Node build → nginx:alpine serve) and supporting config for self-hosted and containerized deployment
 
 ### Modified Capabilities
 
@@ -33,5 +31,4 @@ _(none — this is a greenfield project)_
 - **New dependencies**: `react`, `react-dom`, `maplibre-gl`, `deck.gl`, `@deck.gl/react`, `@deck.gl/layers`, `h3-js`, `ngeohash` (or `geohash-js`), `vite`, `@vitejs/plugin-react`
 - **New dev dependencies**: `typescript`, `@types/react`, `@types/react-dom`
 - **Static assets**: Natural Earth countries GeoJSON (~500KB, bundled)
-- **Infrastructure**: `Dockerfile`, `nginx.conf` added to repository root
 - **Existing files**: `package.json` will be replaced/restructured for the Vite + React app; existing utility deps may be removed

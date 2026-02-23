@@ -36,31 +36,31 @@
 
 - [x] 5.1 Implement `getGeohashPrecision(zoom: number): number` using the zoom-to-precision lookup table from design.md
 - [x] 5.2 Implement `getGeohashCells(bounds, precision): string[]` using `ngeohash.bboxes()` for viewport-intersecting cells
-- [x] 5.3 Implement best-effort cell count guard: if result exceeds 1,000, reduce precision by 1 and retry; stop at precision 1
+- [x] 5.3 Implement best-effort cell count guard: if result exceeds 250, reduce precision by 1 and retry; stop at precision 1
 - [x] 5.4 Convert geohash strings to GeoJSON `FeatureCollection` of rectangular `Polygon` features (each storing its hash string as a feature property)
-- [x] 5.5 Render cells via Deck.gl `GeoJsonLayer` with `pickable: true`; unselected style: no fill, stroke at 30% opacity
+- [x] 5.5 Render cells via Deck.gl `GeoJsonLayer` with `pickable: false`; unselected style: no fill, stroke at 30% opacity
 - [x] 5.6 Apply selected cell style: fill at 30% opacity + stroke at 30% opacity in highlight color
-- [x] 5.7 Handle cell click: select clicked cell (store hash + center point); re-click selected cell deselects it
+- [x] 5.7 Handle cell click: select clicked cell (store hash + lng/lat); re-click selected cell deselects it
 - [x] 5.8 On precision change from zoom: recompute selected cell using stored center point at new precision
 - [x] 5.9 Clear Geohash grid and selection when mode switches to H3
 
 ## 6. H3 Grid
 
-- [ ] 6.1 Implement `getH3Resolution(zoom: number): number` using the zoom-to-resolution lookup table from design.md
-- [ ] 6.2 Implement `getH3Cells(bounds, resolution): string[]` using `h3.polygonToCells()` on the viewport polygon
-- [ ] 6.3 Implement best-effort cell count guard: if result exceeds 1,000, reduce resolution by 1 and retry; stop at resolution 0
-- [ ] 6.4 Convert H3 index strings to GeoJSON `FeatureCollection` of `Polygon` features using `h3.cellToBoundary()` (each storing its H3 index as a feature property)
-- [ ] 6.5 Render cells via Deck.gl `GeoJsonLayer` with `pickable: true`; unselected style: no fill, stroke at 60% opacity
-- [ ] 6.6 Apply selected cell style: fill at 30% opacity + stroke at 60% opacity in highlight color
-- [ ] 6.7 Handle cell click: select clicked cell (store H3 index + center point via `h3.cellToLatLng()`); re-click selected cell deselects it
-- [ ] 6.8 On resolution change from zoom: recompute selected cell using stored center point at new resolution via `h3.latLngToCell()`
-- [ ] 6.9 Clear H3 grid and selection when mode switches to Geohash
+- [x] 6.1 Implement `getH3Resolution(zoom: number): number` using the zoom-to-resolution lookup table from design.md
+- [x] 6.2 Implement `getH3Cells(bounds, resolution): string[]` using `h3.polygonToCells()` on the viewport polygon
+- [x] 6.3 Implement best-effort cell count guard: if result exceeds 250, reduce resolution by 1 and retry; stop at resolution 0
+- [x] 6.4 Convert H3 index strings to GeoJSON `FeatureCollection` of `Polygon` features using `h3.cellToBoundary()` (each storing its H3 index as a feature property)
+- [x] 6.5 Render cells via Deck.gl `GeoJsonLayer` with `pickable: false`; unselected style: no fill, stroke at 30% opacity
+- [x] 6.6 Apply selected cell style: fill at 30% opacity + stroke at 30% opacity in highlight color
+- [x] 6.7 Handle cell click: select clicked cell (store H3 index + lng/lat via `h3.cellToLatLng()`); re-click selected cell deselects it
+- [x] 6.8 On resolution change from zoom: recompute selected cell using stored center point at new resolution via `h3.latLngToCell()`
+- [x] 6.9 Clear H3 grid and selection when mode switches to Geohash
 
 ## 7. Mode Toggle & Cross-Mode Selection
 
-- [ ] 7.1 Implement mode toggle in header; wire to `mode` state (`geohash` | `h3`)
-- [ ] 7.2 On mode switch with active selection: recompute selected cell in new mode using stored center point; update metadata panel
-- [ ] 7.3 On mode switch with no selection: leave metadata panel in empty placeholder state
+- [x] 7.1 Implement mode toggle in header; wire to `mode` state (`geohash` | `h3`)
+- [x] 7.2 On mode switch with active selection: recompute selected cell in new mode using stored center point; update metadata panel
+- [x] 7.3 On mode switch with no selection: leave metadata panel in empty placeholder state
 
 ## 8. Cell Metadata Panel
 
@@ -80,11 +80,3 @@
 - [ ] 9.4 Prevent submission if either field is empty; do not show errors for empty fields
 - [ ] 9.5 On valid submit: compute containing cell in active mode at current precision/resolution; store center point
 - [ ] 9.6 Pan and zoom map to center on the cell; select the cell and populate metadata panel
-
-## 10. Deployment
-
-- [ ] 10.1 Write multi-stage `Dockerfile`: Stage 1 `node:20-alpine` runs `npm ci && npm run build`; Stage 2 `nginx:alpine` copies `dist/` to `/usr/share/nginx/html`
-- [ ] 10.2 Write `nginx.conf`: serve static files, `try_files $uri /index.html`, gzip enabled for JS/CSS/JSON
-- [ ] 10.3 Add `.dockerignore` to exclude `node_modules/`, `.git/`, etc.
-- [ ] 10.4 Verify `docker build` completes successfully and `docker run -p 8080:80` serves the app at `http://localhost:8080`
-- [ ] 10.5 Update `README.md` with self-hosting instructions (static serve and Docker)

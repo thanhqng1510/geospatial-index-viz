@@ -4,7 +4,6 @@ The repository is currently a blank slate with only scaffolding/tooling dependen
 
 Key constraints:
 - No external API keys (tile provider must be free and keyless)
-- Must work self-hosted and in a Docker container
 - All geospatial computation must be client-side
 
 ## Goals / Non-Goals
@@ -15,7 +14,6 @@ Key constraints:
 - Click-to-inspect cell metadata in a sidebar panel
 - Lat/lng coordinate input that jumps to and highlights the relevant cell
 - Two basemap modes: Streets and Minimal
-- Docker deployment with nginx
 - Clean, performant rendering that only draws cells visible in the current viewport
 
 **Non-Goals:**
@@ -43,7 +41,7 @@ Key constraints:
 
 **Decision**: Use `ngeohash` (Geohash) and `h3-js` (H3) directly in the browser. No API server.
 
-**Rationale**: Both libraries are pure JavaScript. Cell boundary computation is fast enough client-side even for thousands of cells. Eliminating a backend simplifies deployment dramatically — the Docker container is just nginx serving static assets.
+**Rationale**: Both libraries are pure JavaScript. Cell boundary computation is fast enough client-side even for thousands of cells. Eliminating a backend simplifies deployment — the app is just static files that can be served by any web server.
 
 **Alternatives considered**:
 - _Node.js API_: Would add latency, complexity, and a stateful container. No benefit given the computation is trivial in JS.
@@ -133,21 +131,6 @@ Key constraints:
 ```
 
 **Decision**: Fixed-width left panel (300px), full-height map canvas. Header bar holds the two toggle controls. This keeps the map as the primary element.
-
----
-
-### 8. Deployment: multi-stage Docker build
-
-**Decision**:
-```
-Stage 1 (node:20-alpine):  npm install && npm run build  → /app/dist
-Stage 2 (nginx:alpine):    COPY dist/ /usr/share/nginx/html
-                           COPY nginx.conf /etc/nginx/conf.d/default.conf
-```
-
-**nginx.conf**: Serves static files, `try_files $uri /index.html` for SPA routing (not strictly needed yet but future-safe), gzip enabled.
-
-**Rationale**: Multi-stage keeps the final image small (nginx:alpine ~10MB). No Node.js runtime in the production image.
 
 ## Risks / Trade-offs
 
