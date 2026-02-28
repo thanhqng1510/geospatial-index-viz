@@ -69,9 +69,7 @@ export function useH3Layer(
     if (mode !== 'h3' || !crossModeAnchor || cells.length === 0 || selectedCell) return
     const resolution = getResolution(cells[0])
     const h3Index = encodeH3(crossModeAnchor.lat, crossModeAnchor.lng, resolution)
-    if (cells.includes(h3Index)) {
-      setSelectedCell({ h3Index })
-    }
+    setSelectedCell({ h3Index })
   }, [mode, cells]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // GeoJSON FeatureCollection for rendering
@@ -83,14 +81,8 @@ export function useH3Layer(
       if (mode !== 'h3' || !viewport || cells.length === 0) return
 
       // Derive the actual rendered resolution from cells (guard may have reduced it)
-      const resolution: number = getResolution(cells[0])
+      const resolution: number = cells[0] ? getResolution(cells[0]) : 4 // fallback to a default
       const clickedIndex = encodeH3(lat, lng, resolution)
-
-      if (!cells.includes(clickedIndex)) {
-        setSelectedCell(null)
-        onAnchorChange(null)
-        return
-      }
 
       setSelectedCell((prev) => {
         const next = prev?.h3Index === clickedIndex

@@ -1,0 +1,82 @@
+.coordinate-input {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.coordinate-input__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.coordinate-input__form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.coordinate-input__label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #555;
+  font-weight: 500;
+}
+
+.coordinate-input__field {
+  width: 180px;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.coordinate-input__field:focus {
+  outline: none;
+  border-color: #1ca3ec;
+}
+
+.coordinate-input__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.coordinate-input__btn {
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  background: white;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.coordinate-input__btn:hover {
+  background: #f5f5f5;
+}
+
+.coordinate-input__btn--primary {
+  background: #1ca3ec;
+  color: white;
+  border-color: #1ca3ec;
+  font-weight: 500;
+}
+
+.coordinate-input__btn--primary:hover {
+  background: #158bc9;
+  border-color: #158bc9;
+}
+
+.coordinate-input__error {
+  margin: 0;
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 500;
+}

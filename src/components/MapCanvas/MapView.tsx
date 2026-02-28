@@ -146,6 +146,29 @@ function MapView({ basemap, onDeckViewStateChange, onClick }: MapViewProps) {
     }
   }, [basemap])
 
+  const { navigationCommand } = useViewport()
+  useEffect(() => {
+    if (!mapRef.current || !navigationCommand) return
+
+    const map = mapRef.current
+    const targetZoom = navigationCommand.zoom ?? map.getZoom()
+    
+    // Pan to location and trigger a pseudo-click immediately at the target center
+    map.flyTo({
+      center: [navigationCommand.lng, navigationCommand.lat],
+      zoom: targetZoom,
+      duration: 1000 // smooth transition
+    })
+
+    // The onClickRef will fire immediately. The child layers (useGeohash/useH3)
+    // should be robust enough to handle a point outside the currently rendered viewport cells.
+    map.once('moveend', () => {
+      // simulate click at that spot
+      onClickRef.current?.({ lng: navigationCommand.lng, lat: navigationCommand.lat })
+    })
+
+  }, [navigationCommand])
+
   return <div ref={mapContainerRef} className="map-view" />
 }
 

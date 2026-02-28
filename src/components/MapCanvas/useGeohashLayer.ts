@@ -70,9 +70,7 @@ export function useGeohashLayer(
     if (mode !== 'geohash' || !crossModeAnchor || cells.length === 0 || selectedCell) return
     const precision = cells[0].length
     const hash = encodeGeohash(crossModeAnchor.lat, crossModeAnchor.lng, precision)
-    if (cells.includes(hash)) {
-      setSelectedCell({ hash })
-    }
+    setSelectedCell({ hash })
   }, [mode, cells]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // GeoJSON FeatureCollection for rendering
@@ -87,12 +85,6 @@ export function useGeohashLayer(
       // not the zoom-derived one — the guard may have reduced it
       const precision = cells[0]?.length ?? getGeohashPrecision(viewport.zoom)
       const clickedHash = encodeGeohash(lat, lng, precision)
-
-      if (!cells.includes(clickedHash)) {
-        setSelectedCell(null)
-        onAnchorChange(null)
-        return
-      }
 
       setSelectedCell((prev) => {
         const next = prev?.hash === clickedHash
