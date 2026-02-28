@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { Mode, Basemap } from './types'
+import type { Mode, Basemap, Selection } from './types'
 import Header from './components/Header/Header'
 import LeftPanel from './components/LeftPanel/LeftPanel'
 import MapCanvas from './components/MapCanvas/MapCanvas'
@@ -9,6 +9,7 @@ import './App.css'
 function App() {
   const [mode, setMode] = useState<Mode>('none')
   const [basemap, setBasemap] = useState<Basemap>('streets')
+  const [selection, setSelection] = useState<Selection>(null)
 
   return (
     <ViewportProvider>
@@ -20,8 +21,8 @@ function App() {
           onBasemapChange={setBasemap}
         />
         <div className="app__body">
-          <LeftPanel />
-          <MapCanvas basemap={basemap} mode={mode} />
+          <LeftPanel selection={selection} />
+          <MapCanvas basemap={basemap} mode={mode} onSelectionChange={setSelection} />
         </div>
       </div>
     </ViewportProvider>

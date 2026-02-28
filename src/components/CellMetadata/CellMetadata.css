@@ -1,0 +1,52 @@
+.cell-metadata {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cell-metadata__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.metadata-list {
+  display: grid;
+  grid-template-columns: min-content 1fr;
+  row-gap: 8px;
+  column-gap: 16px;
+  margin: 0;
+  font-size: 14px;
+}
+
+.metadata-list dt {
+  font-weight: 500;
+  color: #666;
+  white-space: nowrap;
+}
+
+.metadata-list dd {
+  margin: 0;
+  color: #333;
+  word-break: break-all;
+  text-align: right;
+}
+
+.metadata-list code {
+  background: #f0f0f0;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.metadata-list .info-label {
+  border-bottom: 1px dotted #999;
+  cursor: help;
+  text-decoration: none;
+}
+
+.metadata-list .warning {
+  color: #d97706;
+  font-weight: 600;
+}

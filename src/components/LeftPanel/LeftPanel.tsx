@@ -1,6 +1,12 @@
+import type { Selection } from '../../types'
+import CellMetadata from '../CellMetadata/CellMetadata'
 import './LeftPanel.css'
 
-function LeftPanel() {
+interface LeftPanelProps {
+  selection: Selection
+}
+
+function LeftPanel({ selection }: LeftPanelProps) {
   return (
     <aside className="left-panel">
       <section className="left-panel__coordinate-input">
@@ -8,8 +14,7 @@ function LeftPanel() {
         <p className="left-panel__placeholder">Coordinate input coming soon</p>
       </section>
       <section className="left-panel__metadata">
-        {/* CellMetadata component — implemented in Task 8 */}
-        <p className="left-panel__placeholder">Click a cell to see its details</p>
+        <CellMetadata selection={selection} />
       </section>
     </aside>
   )

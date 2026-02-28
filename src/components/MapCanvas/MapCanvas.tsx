@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import DeckGL from '@deck.gl/react'
-import type { Basemap, Mode } from '../../types'
+import type { Basemap, Mode, Selection } from '../../types'
 import { useGeohashLayer } from './useGeohashLayer'
 import { useH3Layer } from './useH3Layer'
 import MapView from './MapView'
@@ -30,17 +30,31 @@ const INITIAL_DECK_VIEW_STATE: DeckViewState = {
 interface MapCanvasProps {
   basemap: Basemap
   mode: Mode
+  onSelectionChange?: (selection: Selection) => void
 }
 
-function MapCanvas({ basemap, mode }: MapCanvasProps) {
+function MapCanvas({ basemap, mode, onSelectionChange }: MapCanvasProps) {
   const [deckViewState, setDeckViewState] = useState<DeckViewState>(INITIAL_DECK_VIEW_STATE)
   
   // Shared anchor: updated whenever the active mode has a selection, used to
   // auto-select in the new mode when the user switches modes.
   const [crossModeAnchor, setCrossModeAnchor] = useState<Anchor | null>(null)
 
-  const { layers: geohashLayers, onClick: geohashOnClick } = useGeohashLayer(mode, crossModeAnchor, setCrossModeAnchor)
-  const { layers: h3Layers, onClick: h3OnClick } = useH3Layer(mode, crossModeAnchor, setCrossModeAnchor)
+  const { layers: geohashLayers, onClick: geohashOnClick, selectedCell: geohashSelection } = useGeohashLayer(mode, crossModeAnchor, setCrossModeAnchor)
+  const { layers: h3Layers, onClick: h3OnClick, selectedCell: h3Selection } = useH3Layer(mode, crossModeAnchor, setCrossModeAnchor)
+
+  // Report active selection up to parent
+  useEffect(() => {
+    if (!onSelectionChange) return
+
+    if (mode === 'geohash') {
+      onSelectionChange(geohashSelection ? { hash: geohashSelection.hash } : null)
+    } else if (mode === 'h3') {
+      onSelectionChange(h3Selection ? { h3Index: h3Selection.h3Index } : null)
+    } else {
+      onSelectionChange(null)
+    }
+  }, [mode, geohashSelection, h3Selection, onSelectionChange])
 
   // Route map clicks to the active mode's handler
   const handleClick = useCallback(
