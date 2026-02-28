@@ -22,6 +22,8 @@
     "@deck.gl/geo-layers": "^9.2.9",
     "@deck.gl/layers": "^9.2.9",
     "@deck.gl/react": "^9.2.9",
+    "@turf/distance": "^7.3.4",
+    "@turf/helpers": "^7.3.4",
     "deck.gl": "^9.2.9",
     "h3-js": "^4.4.0",
     "maplibre-gl": "^5.18.0",
@@ -30,7 +32,7 @@
     "react-dom": "^19.2.4"
   },
   "devDependencies": {
-    "@fission-ai/openspec": "^1.1.1",
+    "@fission-ai/openspec": "^1.2.0",
     "@types/ngeohash": "^0.6.8",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
