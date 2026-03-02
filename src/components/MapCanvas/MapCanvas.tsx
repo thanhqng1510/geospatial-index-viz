@@ -3,6 +3,7 @@ import DeckGL from '@deck.gl/react'
 import type { Basemap, Mode, Selection } from '../../types'
 import { useGeohashLayer } from './useGeohashLayer'
 import { useH3Layer } from './useH3Layer'
+import { useS2Layer } from './useS2Layer'
 import MapView from './MapView'
 import './MapCanvas.css'
 
@@ -35,13 +36,14 @@ interface MapCanvasProps {
 
 function MapCanvas({ basemap, mode, onSelectionChange }: MapCanvasProps) {
   const [deckViewState, setDeckViewState] = useState<DeckViewState>(INITIAL_DECK_VIEW_STATE)
-  
+
   // Shared anchor: updated whenever the active mode has a selection, used to
   // auto-select in the new mode when the user switches modes.
   const [crossModeAnchor, setCrossModeAnchor] = useState<Anchor | null>(null)
 
   const { layers: geohashLayers, onClick: geohashOnClick, selectedCell: geohashSelection } = useGeohashLayer(mode, crossModeAnchor, setCrossModeAnchor)
   const { layers: h3Layers, onClick: h3OnClick, selectedCell: h3Selection } = useH3Layer(mode, crossModeAnchor, setCrossModeAnchor)
+  const { layers: s2Layers, onClick: s2OnClick, selectedCell: s2Selection } = useS2Layer(mode, crossModeAnchor, setCrossModeAnchor)
 
   // Report active selection up to parent
   useEffect(() => {
@@ -51,21 +53,24 @@ function MapCanvas({ basemap, mode, onSelectionChange }: MapCanvasProps) {
       onSelectionChange(geohashSelection ? { hash: geohashSelection.hash } : null)
     } else if (mode === 'h3') {
       onSelectionChange(h3Selection ? { h3Index: h3Selection.h3Index } : null)
+    } else if (mode === 's2') {
+      onSelectionChange(s2Selection ? { s2Token: s2Selection.s2Token } : null)
     } else {
       onSelectionChange(null)
     }
-  }, [mode, geohashSelection, h3Selection, onSelectionChange])
+  }, [mode, geohashSelection, h3Selection, s2Selection, onSelectionChange])
 
   // Route map clicks to the active mode's handler
   const handleClick = useCallback(
     (lngLat: { lng: number; lat: number }) => {
       geohashOnClick(lngLat)
       h3OnClick(lngLat)
+      s2OnClick(lngLat)
     },
-    [geohashOnClick, h3OnClick],
+    [geohashOnClick, h3OnClick, s2OnClick],
   )
 
-  const layers = [...geohashLayers, ...h3Layers]
+  const layers = [...geohashLayers, ...h3Layers, ...s2Layers]
 
   return (
     <div className="map-canvas">

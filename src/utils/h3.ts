@@ -1,6 +1,8 @@
 import * as h3 from 'h3-js'
+import { s2 } from 's2js'
 import type { FeatureCollection, Polygon } from 'geojson'
 import type { ViewportBounds } from '../context/ViewportContext'
+import { slerp } from './geometry'
 
 const MAX_CELLS = 250
 const MIN_RESOLUTION = 0
@@ -74,6 +76,7 @@ export function getH3CellCenter(h3Index: string): { lat: number; lng: number } {
  * Converts an array of H3 index strings into a GeoJSON FeatureCollection of hexagonal
  * Polygon features. Each feature stores its source H3 index in `properties.h3Index`
  * for use in click-to-select and metadata display.
+ * Densifies edges and handles antimeridian wrapping to prevent "ghost lines".
  */
 export function h3sToGeoJSON(
   h3Indexes: string[],
@@ -83,16 +86,45 @@ export function h3sToGeoJSON(
     features: h3Indexes.map((h3Index) => {
       // cellToBoundary returns [lat, lng][] — convert to GeoJSON [lng, lat][]
       const boundary = h3.cellToBoundary(h3Index)
-      const coordinates = boundary.map(([lat, lng]) => [lng, lat] as [number, number])
-      // GeoJSON polygons must be closed (first === last)
-      coordinates.push(coordinates[0])
+
+      const rawCoords: [number, number][] = []
+      const segmentsPerEdge = 8 // Sufficient for H3 resolution 0-2 curvature
+
+      for (let i = 0; i < boundary.length; i++) {
+        const [lat1, lng1] = boundary[i]
+        const [lat2, lng2] = boundary[(i + 1) % boundary.length]
+
+        const start = s2.Point.fromLatLng(s2.LatLng.fromDegrees(lat1, lng1))
+        const end = s2.Point.fromLatLng(s2.LatLng.fromDegrees(lat2, lng2))
+
+        for (let step = 0; step < segmentsPerEdge; step++) {
+          rawCoords.push(slerp(start, end, step / segmentsPerEdge))
+        }
+      }
+      // Add the first point again to close
+      rawCoords.push(rawCoords[0])
+
+      // Robust "unwrapping": ensure each point is within 180° of the previous one.
+      const unwrappedCoords: [number, number][] = []
+      if (rawCoords.length > 0) {
+        unwrappedCoords.push(rawCoords[0])
+        for (let i = 1; i < rawCoords.length; i++) {
+          let [lng, lat] = rawCoords[i]
+          const prevLng = unwrappedCoords[i - 1][0]
+
+          while (lng - prevLng > 180) lng -= 360
+          while (lng - prevLng < -180) lng += 360
+
+          unwrappedCoords.push([lng, lat])
+        }
+      }
 
       return {
         type: 'Feature',
         properties: { h3Index },
         geometry: {
           type: 'Polygon',
-          coordinates: [coordinates],
+          coordinates: [unwrappedCoords],
         },
       }
     }),

@@ -3,6 +3,7 @@ import type { Selection } from '../../types'
 import { getGeohashCellCenter } from '../../utils/geohash'
 import ngeohash from 'ngeohash'
 import { cellArea, cellToLatLng, getResolution, isPentagon, UNITS } from 'h3-js'
+import { getS2CellCenter, getS2CellLevel, getS2CellAreaSqM } from '../../utils/s2'
 import distance from '@turf/distance'
 import { point } from '@turf/helpers'
 import './CellMetadata.css'
@@ -103,23 +104,46 @@ function H3Metadata({ h3Index }: { h3Index: string }) {
   )
 }
 
+function S2Metadata({ s2Token }: { s2Token: string }) {
+  const metadata = useMemo(() => {
+    const level = getS2CellLevel(s2Token)
+    const center = getS2CellCenter(s2Token)
+    const areaSqM = getS2CellAreaSqM(s2Token)
+
+    return {
+      level,
+      center: `${formatNumber(center.lat)}, ${formatNumber(center.lng)}`,
+      area: formatArea(areaSqM),
+    }
+  }, [s2Token])
+
+  return (
+    <dl className="metadata-list">
+      <dt>S2 Token</dt><dd><code>{s2Token}</code></dd>
+      <dt>Level</dt><dd>{metadata.level}</dd>
+      <dt>Center</dt><dd>{metadata.center}</dd>
+      <dt>Approx Area</dt><dd>{metadata.area}</dd>
+    </dl>
+  )
+}
+
 function CellMetadata({ selection }: CellMetadataProps) {
   if (!selection) {
     return <p className="left-panel__placeholder">Click a cell to see its details</p>
   }
 
   const isGeohash = 'hash' in selection
+  const isH3 = 'h3Index' in selection
+  const isS2 = 's2Token' in selection
 
   return (
     <div className="cell-metadata">
       <h3 className="cell-metadata__title">
-        {isGeohash ? 'Geohash Cell' : 'H3 Cell'}
+        {isGeohash ? 'Geohash Cell' : isH3 ? 'H3 Cell' : 'S2 Cell'}
       </h3>
-      {isGeohash ? (
-        <GeohashMetadata hash={selection.hash} />
-      ) : (
-        <H3Metadata h3Index={selection.h3Index} />
-      )}
+      {isGeohash && <GeohashMetadata hash={selection.hash} />}
+      {isH3 && <H3Metadata h3Index={selection.h3Index} />}
+      {isS2 && <S2Metadata s2Token={selection.s2Token} />}
     </div>
   )
 }
