@@ -13,6 +13,7 @@ import ngeohash from 'ngeohash'
 // Colors
 const GEOHASH_COLOR: [number, number, number] = [28, 163, 236]        // blue
 const GEOHASH_SELECTED_COLOR: [number, number, number] = [255, 140, 0] // orange highlight
+const NEIGHBOR_COLOR: [number, number, number] = [100, 200, 180]       // muted teal
 const STROKE_OPACITY = 77   // 30% of 255
 const FILL_OPACITY = 77    // 30% of 255
 const TEXT_OPACITY = 180   // 70% of 255
@@ -39,6 +40,7 @@ export function useGeohashLayer(
   mode: Mode,
   crossModeAnchor: { lat: number; lng: number } | null,
   onAnchorChange: (anchor: { lat: number; lng: number } | null) => void,
+  showNeighbors: boolean,
 ) {
   const { viewport } = useViewport()
   const [selectedCell, setSelectedCell] = useState<SelectedCell | null>(null)
@@ -152,9 +154,30 @@ export function useGeohashLayer(
     })
   }, [labelData, mode])
 
+  // Neighbor layer: ring-1 neighbors of the selected cell
+  const neighborLayer = useMemo(() => {
+    if (mode !== 'geohash' || !showNeighbors || !selectedCell) return null
+
+    const raw = ngeohash.neighbors(selectedCell.hash)
+    const neighborHashes = [...new Set(Object.values(raw) as string[])]
+    const neighborGeoJSON = geohashesToGeoJSON(neighborHashes)
+
+    return new GeoJsonLayer({
+      id: 'geohash-neighbors',
+      data: neighborGeoJSON,
+      pickable: false,
+      stroked: true,
+      filled: true,
+      lineWidthMinPixels: 2.5,
+      lineWidthScale: 1,
+      getFillColor: [...NEIGHBOR_COLOR, FILL_OPACITY] as [number, number, number, number],
+      getLineColor: [...NEIGHBOR_COLOR, STROKE_OPACITY] as [number, number, number, number],
+    })
+  }, [mode, showNeighbors, selectedCell])
+
   const layers = useMemo(
-    () => [layer, textLayer].filter(Boolean),
-    [layer, textLayer],
+    () => [layer, neighborLayer, textLayer].filter(Boolean),
+    [layer, neighborLayer, textLayer],
   )
 
   return { layers, onClick, selectedCell }

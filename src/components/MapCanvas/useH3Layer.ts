@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { GeoJsonLayer, TextLayer } from '@deck.gl/layers'
-import { getResolution, cellToLatLng } from 'h3-js'
+import { getResolution, cellToLatLng, gridDisk } from 'h3-js'
 import type { Mode } from '../../types'
 import { useViewport } from '../../context/ViewportContext'
 import {
@@ -12,6 +12,7 @@ import {
 // Colors
 const H3_COLOR: [number, number, number] = [102, 194, 164]           // teal/green
 const H3_SELECTED_COLOR: [number, number, number] = [255, 140, 0]    // orange highlight
+const NEIGHBOR_COLOR: [number, number, number] = [100, 200, 180]     // muted teal
 const STROKE_OPACITY = 77   // 30% of 255
 const FILL_OPACITY = 77    // 30% of 255
 const TEXT_OPACITY = 180   // 70% of 255
@@ -38,6 +39,7 @@ export function useH3Layer(
   mode: Mode,
   crossModeAnchor: { lat: number; lng: number } | null,
   onAnchorChange: (anchor: { lat: number; lng: number } | null) => void,
+  showNeighbors: boolean,
 ) {
   const { viewport } = useViewport()
   const [selectedCell, setSelectedCell] = useState<SelectedCell | null>(null)
@@ -149,7 +151,28 @@ export function useH3Layer(
     })
   }, [labelData, mode])
 
-  const layers = useMemo(() => [layer, textLayer].filter(Boolean), [layer, textLayer])
+  // Neighbor layer: ring-1 neighbors of the selected cell (gridDisk minus center)
+  const neighborLayer = useMemo(() => {
+    if (mode !== 'h3' || !showNeighbors || !selectedCell) return null
+
+    const disk = gridDisk(selectedCell.h3Index, 1)
+    const neighborIndexes = disk.filter((idx) => idx !== selectedCell.h3Index)
+    const neighborGeoJSON = h3sToGeoJSON(neighborIndexes)
+
+    return new GeoJsonLayer({
+      id: 'h3-neighbors',
+      data: neighborGeoJSON,
+      pickable: false,
+      stroked: true,
+      filled: true,
+      lineWidthMinPixels: 2.5,
+      lineWidthScale: 1,
+      getFillColor: [...NEIGHBOR_COLOR, FILL_OPACITY] as [number, number, number, number],
+      getLineColor: [...NEIGHBOR_COLOR, STROKE_OPACITY] as [number, number, number, number],
+    })
+  }, [mode, showNeighbors, selectedCell])
+
+  const layers = useMemo(() => [layer, neighborLayer, textLayer].filter(Boolean), [layer, neighborLayer, textLayer])
 
   return { layers, onClick, selectedCell }
 }

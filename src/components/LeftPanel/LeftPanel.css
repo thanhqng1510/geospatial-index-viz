@@ -24,3 +24,18 @@
   font-size: 13px;
   color: #999;
 }
+
+.left-panel__neighbors {
+  padding: 16px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.left-panel__neighbors-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
+  user-select: none;
+}

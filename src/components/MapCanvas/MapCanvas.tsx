@@ -31,19 +31,20 @@ const INITIAL_DECK_VIEW_STATE: DeckViewState = {
 interface MapCanvasProps {
   basemap: Basemap
   mode: Mode
+  showNeighbors: boolean
   onSelectionChange?: (selection: Selection) => void
 }
 
-function MapCanvas({ basemap, mode, onSelectionChange }: MapCanvasProps) {
+function MapCanvas({ basemap, mode, showNeighbors, onSelectionChange }: MapCanvasProps) {
   const [deckViewState, setDeckViewState] = useState<DeckViewState>(INITIAL_DECK_VIEW_STATE)
 
   // Shared anchor: updated whenever the active mode has a selection, used to
   // auto-select in the new mode when the user switches modes.
   const [crossModeAnchor, setCrossModeAnchor] = useState<Anchor | null>(null)
 
-  const { layers: geohashLayers, onClick: geohashOnClick, selectedCell: geohashSelection } = useGeohashLayer(mode, crossModeAnchor, setCrossModeAnchor)
-  const { layers: h3Layers, onClick: h3OnClick, selectedCell: h3Selection } = useH3Layer(mode, crossModeAnchor, setCrossModeAnchor)
-  const { layers: s2Layers, onClick: s2OnClick, selectedCell: s2Selection } = useS2Layer(mode, crossModeAnchor, setCrossModeAnchor)
+  const { layers: geohashLayers, onClick: geohashOnClick, selectedCell: geohashSelection } = useGeohashLayer(mode, crossModeAnchor, setCrossModeAnchor, showNeighbors)
+  const { layers: h3Layers, onClick: h3OnClick, selectedCell: h3Selection } = useH3Layer(mode, crossModeAnchor, setCrossModeAnchor, showNeighbors)
+  const { layers: s2Layers, onClick: s2OnClick, selectedCell: s2Selection } = useS2Layer(mode, crossModeAnchor, setCrossModeAnchor, showNeighbors)
 
   // Report active selection up to parent
   useEffect(() => {

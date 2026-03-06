@@ -10,6 +10,7 @@ function App() {
   const [mode, setMode] = useState<Mode>('none')
   const [basemap, setBasemap] = useState<Basemap>('streets')
   const [selection, setSelection] = useState<Selection>(null)
+  const [showNeighbors, setShowNeighbors] = useState(false)
 
   return (
     <ViewportProvider>
@@ -21,8 +22,8 @@ function App() {
           onBasemapChange={setBasemap}
         />
         <div className="app__body">
-          <LeftPanel selection={selection} />
-          <MapCanvas basemap={basemap} mode={mode} onSelectionChange={setSelection} />
+          <LeftPanel selection={selection} showNeighbors={showNeighbors} onShowNeighborsChange={setShowNeighbors} />
+          <MapCanvas basemap={basemap} mode={mode} showNeighbors={showNeighbors} onSelectionChange={setSelection} />
         </div>
       </div>
     </ViewportProvider>

@@ -1,10 +1,12 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { GeoJsonLayer, TextLayer } from '@deck.gl/layers'
+import { s2 } from 's2js'
 import type { Mode } from '../../types'
 import { useViewport } from '../../context/ViewportContext'
 import {
   getS2CellsGuarded,
   getS2Level,
+  getS2CellLevel,
   s2sToGeoJSON,
   encodeS2,
 } from '../../utils/s2'
@@ -12,6 +14,7 @@ import {
 // Colors
 const S2_COLOR: [number, number, number] = [220, 80, 160]          // pink/rose
 const S2_SELECTED_COLOR: [number, number, number] = [255, 140, 0]  // orange highlight
+const NEIGHBOR_COLOR: [number, number, number] = [100, 200, 180]   // muted teal
 const STROKE_OPACITY = 77   // 30% of 255
 const FILL_OPACITY = 77     // 30% of 255
 const TEXT_OPACITY = 180    // 70% of 255
@@ -32,6 +35,7 @@ export function useS2Layer(
   mode: Mode,
   crossModeAnchor: { lat: number; lng: number } | null,
   onAnchorChange: (anchor: { lat: number; lng: number } | null) => void,
+  showNeighbors: boolean,
 ) {
   const { viewport } = useViewport()
   const [selectedCell, setSelectedCell] = useState<SelectedCell | null>(null)
@@ -143,7 +147,30 @@ export function useS2Layer(
     })
   }, [labelData, mode])
 
-  const layers = useMemo(() => [layer, textLayer].filter(Boolean), [layer, textLayer])
+  // Neighbor layer: ring-1 neighbors via s2.cellid.allNeighbors, deduplicated
+  const neighborLayer = useMemo(() => {
+    if (mode !== 's2' || !showNeighbors || !selectedCell) return null
+
+    const cellId = s2.cellid.fromToken(selectedCell.s2Token)
+    const level = getS2CellLevel(selectedCell.s2Token)
+    const rawNeighbors = s2.cellid.allNeighbors(cellId, level)
+    const neighborTokens = [...new Set(Array.from(rawNeighbors).map((id) => s2.cellid.toToken(id)))]
+    const neighborGeoJSON = s2sToGeoJSON(neighborTokens)
+
+    return new GeoJsonLayer({
+      id: 's2-neighbors',
+      data: neighborGeoJSON,
+      pickable: false,
+      stroked: true,
+      filled: true,
+      lineWidthMinPixels: 2.5,
+      lineWidthScale: 1,
+      getFillColor: [...NEIGHBOR_COLOR, FILL_OPACITY] as [number, number, number, number],
+      getLineColor: [...NEIGHBOR_COLOR, STROKE_OPACITY] as [number, number, number, number],
+    })
+  }, [mode, showNeighbors, selectedCell])
+
+  const layers = useMemo(() => [layer, neighborLayer, textLayer].filter(Boolean), [layer, neighborLayer, textLayer])
 
   return { layers, onClick, selectedCell }
 }
