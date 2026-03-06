@@ -1,42 +1,36 @@
-import type { Basemap, Mode } from '../../types'
+import type { Basemap, SingleMode, ActiveModes } from '../../types'
 import './Header.css'
 
 interface HeaderProps {
-  mode: Mode
+  activeModes: ActiveModes
   basemap: Basemap
-  onModeChange: (mode: Mode) => void
+  onModeToggle: (mode: SingleMode) => void
   onBasemapChange: (basemap: Basemap) => void
 }
 
-function Header({ mode, basemap, onModeChange, onBasemapChange }: HeaderProps) {
+function Header({ activeModes, basemap, onModeToggle, onBasemapChange }: HeaderProps) {
   return (
     <header className="header">
       <span className="header__title">Geospatial Index Visualizer</span>
       <div className="header__controls">
         <div className="toggle-group" role="group" aria-label="Index mode">
           <button
-            className={`toggle-group__btn${mode === 'geohash' ? ' toggle-group__btn--active' : ''}`}
-            onClick={() => onModeChange('geohash')}
+            className={`toggle-group__btn${activeModes.has('geohash') ? ' toggle-group__btn--active' : ''}`}
+            onClick={() => onModeToggle('geohash')}
           >
             Geohash
           </button>
           <button
-            className={`toggle-group__btn${mode === 'h3' ? ' toggle-group__btn--active' : ''}`}
-            onClick={() => onModeChange('h3')}
+            className={`toggle-group__btn${activeModes.has('h3') ? ' toggle-group__btn--active' : ''}`}
+            onClick={() => onModeToggle('h3')}
           >
             H3
           </button>
           <button
-            className={`toggle-group__btn${mode === 's2' ? ' toggle-group__btn--active' : ''}`}
-            onClick={() => onModeChange('s2')}
+            className={`toggle-group__btn${activeModes.has('s2') ? ' toggle-group__btn--active' : ''}`}
+            onClick={() => onModeToggle('s2')}
           >
             S2
-          </button>
-          <button
-            className={`toggle-group__btn${mode === 'none' ? ' toggle-group__btn--active' : ''}`}
-            onClick={() => onModeChange('none')}
-          >
-            None
           </button>
         </div>
         <div className="toggle-group" role="group" aria-label="Basemap">

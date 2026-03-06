@@ -1,6 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { GeoJsonLayer, TextLayer } from '@deck.gl/layers'
-import type { Mode } from '../../types'
 import { useViewport } from '../../context/ViewportContext'
 import {
   getGeohashCellsGuarded,
@@ -37,7 +36,7 @@ interface SelectedCell {
  * - `selectedCell` — the currently selected cell (hash + center), or null.
  */
 export function useGeohashLayer(
-  mode: Mode,
+  isActive: boolean,
   crossModeAnchor: { lat: number; lng: number } | null,
   onAnchorChange: (anchor: { lat: number; lng: number } | null) => void,
   showNeighbors: boolean,
@@ -47,14 +46,14 @@ export function useGeohashLayer(
 
   // Clear selection when leaving geohash mode
   useEffect(() => {
-    if (mode !== 'geohash') setSelectedCell(null)
-  }, [mode])
+    if (!isActive) setSelectedCell(null)
+  }, [isActive])
 
   // Compute viewport-intersecting cells
   const cells = useMemo(() => {
-    if (!viewport || mode !== 'geohash') return []
+    if (!viewport || !isActive) return []
     return getGeohashCellsGuarded(viewport, viewport.zoom)
-  }, [viewport, mode])
+  }, [viewport, isActive])
 
   // Recompute selected cell's hash when precision changes due to zoom
   useEffect(() => {
@@ -69,11 +68,11 @@ export function useGeohashLayer(
 
   // Auto-select from cross-mode anchor when entering geohash mode with cells ready
   useEffect(() => {
-    if (mode !== 'geohash' || !crossModeAnchor || cells.length === 0 || selectedCell) return
+    if (!isActive || !crossModeAnchor || cells.length === 0 || selectedCell) return
     const precision = cells[0].length
     const hash = encodeGeohash(crossModeAnchor.lat, crossModeAnchor.lng, precision)
     setSelectedCell({ hash })
-  }, [mode, cells]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [cells, isActive]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // GeoJSON FeatureCollection for rendering
   const geojson = useMemo(() => geohashesToGeoJSON(cells), [cells])
@@ -81,7 +80,7 @@ export function useGeohashLayer(
   // Encode the clicked lngLat to a geohash and toggle selection
   const onClick = useCallback(
     ({ lng, lat }: { lng: number; lat: number }) => {
-      if (mode !== 'geohash' || !viewport || cells.length === 0) return
+      if (!isActive || !viewport || cells.length === 0) return
 
       // Use the actual rendered precision (geohash string length = precision),
       // not the zoom-derived one — the guard may have reduced it
@@ -96,35 +95,41 @@ export function useGeohashLayer(
         return next
       })
     },
-    [mode, viewport, cells, onAnchorChange],
+    [isActive, viewport, cells, onAnchorChange],
   )
 
-  // Build the GeoJsonLayer with per-feature styling based on selection
+  // Grid layer: static colors — does not depend on selectedCell, so clicking never re-uploads geometry
   const layer = useMemo(() => {
-    if (mode !== 'geohash') return null
+    if (!isActive) return null
 
     return new GeoJsonLayer({
       id: 'geohash-grid',
       data: geojson,
       pickable: false, // picking is done via MapLibre click + ngeohash.encode
       stroked: true,
+      filled: false,
+      lineWidthMinPixels: 2.5,
+      lineWidthScale: 1,
+      getLineColor: [...GEOHASH_COLOR, STROKE_OPACITY] as [number, number, number, number],
+    })
+  }, [geojson, isActive])
+
+  // Selection layer: single-feature layer rebuilt cheaply on click
+  const selectionLayer = useMemo(() => {
+    if (!isActive || !selectedCell) return null
+
+    return new GeoJsonLayer({
+      id: 'geohash-selection',
+      data: geohashesToGeoJSON([selectedCell.hash]),
+      pickable: false,
+      stroked: true,
       filled: true,
       lineWidthMinPixels: 2.5,
       lineWidthScale: 1,
-      getFillColor: (f) =>
-        f.properties?.hash === selectedCell?.hash
-          ? [...GEOHASH_SELECTED_COLOR, FILL_OPACITY]
-          : [0, 0, 0, 0],
-      getLineColor: (f) =>
-        f.properties?.hash === selectedCell?.hash
-          ? [...GEOHASH_SELECTED_COLOR, STROKE_OPACITY]
-          : [...GEOHASH_COLOR, STROKE_OPACITY],
-      updateTriggers: {
-        getFillColor: selectedCell?.hash,
-        getLineColor: selectedCell?.hash,
-      },
+      getFillColor: [...GEOHASH_SELECTED_COLOR, FILL_OPACITY] as [number, number, number, number],
+      getLineColor: [...GEOHASH_SELECTED_COLOR, STROKE_OPACITY] as [number, number, number, number],
     })
-  }, [geojson, selectedCell, mode])
+  }, [isActive, selectedCell])
 
   // Build label data: top-left (NW) corner of each cell bounding box
   const labelData = useMemo(
@@ -138,7 +143,7 @@ export function useGeohashLayer(
   )
 
   const textLayer = useMemo(() => {
-    if (mode !== 'geohash') return null
+    if (!isActive) return null
 
     return new TextLayer({
       id: 'geohash-labels',
@@ -152,11 +157,11 @@ export function useGeohashLayer(
       fontFamily: 'monospace',
       pickable: false,
     })
-  }, [labelData, mode])
+  }, [labelData, isActive])
 
   // Neighbor layer: ring-1 neighbors of the selected cell
   const neighborLayer = useMemo(() => {
-    if (mode !== 'geohash' || !showNeighbors || !selectedCell) return null
+    if (!isActive || !showNeighbors || !selectedCell) return null
 
     const raw = ngeohash.neighbors(selectedCell.hash)
     const neighborHashes = [...new Set(Object.values(raw) as string[])]
@@ -173,11 +178,11 @@ export function useGeohashLayer(
       getFillColor: [...NEIGHBOR_COLOR, FILL_OPACITY] as [number, number, number, number],
       getLineColor: [...NEIGHBOR_COLOR, STROKE_OPACITY] as [number, number, number, number],
     })
-  }, [mode, showNeighbors, selectedCell])
+  }, [isActive, showNeighbors, selectedCell])
 
   const layers = useMemo(
-    () => [layer, neighborLayer, textLayer].filter(Boolean),
-    [layer, neighborLayer, textLayer],
+    () => [layer, neighborLayer, selectionLayer, textLayer].filter(Boolean),
+    [layer, neighborLayer, selectionLayer, textLayer],
   )
 
   return { layers, onClick, selectedCell }

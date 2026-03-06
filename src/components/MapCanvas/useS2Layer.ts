@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { GeoJsonLayer, TextLayer } from '@deck.gl/layers'
 import { s2 } from 's2js'
-import type { Mode } from '../../types'
 import { useViewport } from '../../context/ViewportContext'
 import {
   getS2CellsGuarded,
@@ -32,7 +31,7 @@ interface SelectedCell {
  * @param onAnchorChange - Propagates anchor changes back to MapCanvas for cross-mode sharing.
  */
 export function useS2Layer(
-  mode: Mode,
+  isActive: boolean,
   crossModeAnchor: { lat: number; lng: number } | null,
   onAnchorChange: (anchor: { lat: number; lng: number } | null) => void,
   showNeighbors: boolean,
@@ -42,14 +41,14 @@ export function useS2Layer(
 
   // Clear selection when leaving s2 mode
   useEffect(() => {
-    if (mode !== 's2') setSelectedCell(null)
-  }, [mode])
+    if (!isActive) setSelectedCell(null)
+  }, [isActive])
 
   // Compute viewport-intersecting cells
   const cells = useMemo(() => {
-    if (!viewport || mode !== 's2') return []
+    if (!viewport || !isActive) return []
     return getS2CellsGuarded(viewport, viewport.zoom)
-  }, [viewport, mode])
+  }, [viewport, isActive])
 
   // Recompute selected cell token when level changes due to zoom
   useEffect(() => {
@@ -64,11 +63,11 @@ export function useS2Layer(
 
   // Auto-select from cross-mode anchor when entering S2 mode with cells ready
   useEffect(() => {
-    if (mode !== 's2' || !crossModeAnchor || cells.length === 0 || selectedCell) return
+    if (!isActive || !crossModeAnchor || cells.length === 0 || selectedCell) return
     const level = getS2Level(viewport?.zoom ?? 2)
     const s2Token = encodeS2(crossModeAnchor.lat, crossModeAnchor.lng, level)
     setSelectedCell({ s2Token })
-  }, [mode, cells]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [cells, isActive]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // GeoJSON FeatureCollection for rendering
   const geojson = useMemo(() => s2sToGeoJSON(cells), [cells])
@@ -76,7 +75,7 @@ export function useS2Layer(
   // Encode the clicked lngLat to an S2 token and toggle selection
   const onClick = useCallback(
     ({ lng, lat }: { lng: number; lat: number }) => {
-      if (mode !== 's2' || !viewport || cells.length === 0) return
+      if (!isActive || !viewport || cells.length === 0) return
 
       const level = getS2Level(viewport.zoom)
       const clickedToken = encodeS2(lat, lng, level)
@@ -89,35 +88,41 @@ export function useS2Layer(
         return next
       })
     },
-    [mode, viewport, cells, onAnchorChange],
+    [isActive, viewport, cells, onAnchorChange],
   )
 
-  // GeoJsonLayer with per-feature styling
+  // Grid layer: static colors — does not depend on selectedCell, so clicking never re-uploads geometry
   const layer = useMemo(() => {
-    if (mode !== 's2') return null
+    if (!isActive) return null
 
     return new GeoJsonLayer({
       id: 's2-grid',
       data: geojson,
       pickable: false,
       stroked: true,
+      filled: false,
+      lineWidthMinPixels: 2.5,
+      lineWidthScale: 1,
+      getLineColor: [...S2_COLOR, STROKE_OPACITY] as [number, number, number, number],
+    })
+  }, [geojson, isActive])
+
+  // Selection layer: single-feature layer rebuilt cheaply on click
+  const selectionLayer = useMemo(() => {
+    if (!isActive || !selectedCell) return null
+
+    return new GeoJsonLayer({
+      id: 's2-selection',
+      data: s2sToGeoJSON([selectedCell.s2Token]),
+      pickable: false,
+      stroked: true,
       filled: true,
       lineWidthMinPixels: 2.5,
       lineWidthScale: 1,
-      getFillColor: (f) =>
-        f.properties?.s2Token === selectedCell?.s2Token
-          ? [...S2_SELECTED_COLOR, FILL_OPACITY]
-          : [0, 0, 0, 0],
-      getLineColor: (f) =>
-        f.properties?.s2Token === selectedCell?.s2Token
-          ? [...S2_SELECTED_COLOR, STROKE_OPACITY]
-          : [...S2_COLOR, STROKE_OPACITY],
-      updateTriggers: {
-        getFillColor: selectedCell?.s2Token,
-        getLineColor: selectedCell?.s2Token,
-      },
+      getFillColor: [...S2_SELECTED_COLOR, FILL_OPACITY] as [number, number, number, number],
+      getLineColor: [...S2_SELECTED_COLOR, STROKE_OPACITY] as [number, number, number, number],
     })
-  }, [geojson, selectedCell, mode])
+  }, [isActive, selectedCell])
 
   // Label at the center of each cell
   const labelData = useMemo(
@@ -131,7 +136,7 @@ export function useS2Layer(
   )
 
   const textLayer = useMemo(() => {
-    if (mode !== 's2') return null
+    if (!isActive) return null
 
     return new TextLayer({
       id: 's2-labels',
@@ -145,11 +150,11 @@ export function useS2Layer(
       fontFamily: 'monospace',
       pickable: false,
     })
-  }, [labelData, mode])
+  }, [labelData, isActive])
 
   // Neighbor layer: ring-1 neighbors via s2.cellid.allNeighbors, deduplicated
   const neighborLayer = useMemo(() => {
-    if (mode !== 's2' || !showNeighbors || !selectedCell) return null
+    if (!isActive || !showNeighbors || !selectedCell) return null
 
     const cellId = s2.cellid.fromToken(selectedCell.s2Token)
     const level = getS2CellLevel(selectedCell.s2Token)
@@ -168,9 +173,9 @@ export function useS2Layer(
       getFillColor: [...NEIGHBOR_COLOR, FILL_OPACITY] as [number, number, number, number],
       getLineColor: [...NEIGHBOR_COLOR, STROKE_OPACITY] as [number, number, number, number],
     })
-  }, [mode, showNeighbors, selectedCell])
+  }, [isActive, showNeighbors, selectedCell])
 
-  const layers = useMemo(() => [layer, neighborLayer, textLayer].filter(Boolean), [layer, neighborLayer, textLayer])
+  const layers = useMemo(() => [layer, neighborLayer, selectionLayer, textLayer].filter(Boolean), [layer, neighborLayer, selectionLayer, textLayer])
 
   return { layers, onClick, selectedCell }
 }

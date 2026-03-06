@@ -1,4 +1,6 @@
-export type Mode = 'geohash' | 'h3' | 's2' | 'none'
+export type SingleMode = 'geohash' | 'h3' | 's2'
+export type ActiveModes = Set<SingleMode>
+
 export type Basemap = 'streets' | 'minimal'
 
 export interface GeohashSelection {

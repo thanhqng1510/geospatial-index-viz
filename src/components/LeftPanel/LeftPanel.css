@@ -25,6 +25,21 @@
   color: #999;
 }
 
+.left-panel__mode-block + .left-panel__mode-block {
+  border-top: 1px solid #e0e0e0;
+  margin-top: 12px;
+  padding-top: 12px;
+}
+
+.left-panel__mode-label {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #888;
+}
+
 .left-panel__neighbors {
   padding: 16px;
   border-top: 1px solid #e0e0e0;

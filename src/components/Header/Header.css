@@ -56,3 +56,8 @@
   background: rgba(255, 255, 255, 0.18);
   color: #fff;
 }
+
+/* Multi-active: active buttons in the mode group show a bottom accent line */
+.toggle-group[aria-label="Index mode"] .toggle-group__btn--active {
+  box-shadow: inset 0 -2px 0 rgba(255, 255, 255, 0.7);
+}
