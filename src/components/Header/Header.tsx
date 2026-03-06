@@ -6,9 +6,10 @@ interface HeaderProps {
   basemap: Basemap
   onModeToggle: (mode: SingleMode) => void
   onBasemapChange: (basemap: Basemap) => void
+  onHelpOpen: () => void
 }
 
-function Header({ activeModes, basemap, onModeToggle, onBasemapChange }: HeaderProps) {
+function Header({ activeModes, basemap, onModeToggle, onBasemapChange, onHelpOpen }: HeaderProps) {
   return (
     <header className="header">
       <span className="header__title">Geospatial Index Visualizer</span>
@@ -47,6 +48,9 @@ function Header({ activeModes, basemap, onModeToggle, onBasemapChange }: HeaderP
             Minimal
           </button>
         </div>
+        <button className="header__help-btn" onClick={onHelpOpen} aria-label="Open help">
+          ❓
+        </button>
       </div>
     </header>
   )

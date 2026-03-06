@@ -1,0 +1,137 @@
+/* Backdrop */
+.help-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+/* Modal container */
+.help-modal__container {
+  background: #1a1a2e;
+  color: #e8e8f0;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  outline: none;
+  overflow: hidden;
+}
+
+/* Header */
+.help-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.help-modal__title {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0;
+  color: #ffffff;
+}
+
+/* Close button */
+.help-modal__close {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+
+.help-modal__close:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Intro paragraph */
+.help-modal__intro {
+  padding: 14px 20px 10px;
+  margin: 0;
+  font-size: 13.5px;
+  color: rgba(255, 255, 255, 0.75);
+  flex-shrink: 0;
+}
+
+/* Scrollable feature list */
+.help-modal__features {
+  margin: 0;
+  padding: 0 20px 8px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.help-modal__feature {
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.help-modal__feature:last-child {
+  border-bottom: none;
+}
+
+.help-modal__feature-term {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+
+.help-modal__feature-desc {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+  line-height: 1.55;
+}
+
+.help-modal__feature-desc kbd {
+  display: inline-block;
+  padding: 1px 5px;
+  font-size: 11px;
+  font-family: monospace;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 3px;
+  color: #fff;
+}
+
+/* Footer */
+.help-modal__footer {
+  padding: 12px 20px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.help-modal__dont-show {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  user-select: none;
+}
+
+.help-modal__dont-show input[type='checkbox'] {
+  cursor: pointer;
+  accent-color: #7b9cff;
+  width: 15px;
+  height: 15px;
+}
